@@ -2,7 +2,7 @@
   <div class="home">
     <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
     <b-button class="button btn-primary" @click="home">Home</b-button>
-    <div style="font-size:2vw">update every 20sec %cpu blue:0-70% yellow:70-100% red>100%</div>
+    <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100%</div>
     <b-table striped hover :items="items" :fields="fields">
       <template v-slot:cell(index)="row">
         {{ row.index + 1 }}
@@ -10,11 +10,14 @@
       <template v-slot:cell(accname)="row">
         {{ row.item.accname }}
       </template>
+      <template v-slot:cell(tlm)="row">
+        {{ row.item.tlm }}
+      </template>
       <template v-slot:cell(balance)="row">
         {{ row.item.balance }}
       </template>
-      <template v-slot:cell(tlm)="row">
-        {{ row.item.tlm }}
+      <template v-slot:cell(stake)="row">
+        {{ row.item.stake }}
       </template>
       <template v-slot:cell(cpu)="row">
         {{ row.item.cpu }}
@@ -31,6 +34,7 @@
          </b-progress>
       </template>
     </b-table>
+    <b-button class="button btn-primary" @click="gettotal">gettotal</b-button>
     <b-button class="button btn-primary" @click="home">Home</b-button>
   </div>
 </template>
@@ -42,9 +46,8 @@ export default {
 name: "Watch",
   data() {
     return {
-      fields: { Index: "index",accname: "accname", balance: "balance",tlm: "tlm",cpu: "cpu",cpuusage: "cpuusage" },
-      items: [
-      ]
+      fields: { Index: "index",accname: "accname",tlm: "tlm", balance: "balance",stake: "stake",cpu: "cpu",cpuusage: "cpuusage" },
+      items: []
     };
   },
   beforeCreate() {
@@ -59,15 +62,14 @@ name: "Watch",
     this.dbRef = firebase.database().ref('users/'+this.userid);
     this.dbRef.on('value', (snapshot) => {
       const data = snapshot.val();
-      this.items = [];
       for (let i = 0; i < data.length; i++) {
-        this.items.push({index:i+1,accname: data[i],balance:"",tlm:"",cpu:"",cpuusage:0})
+        this.items.push({index:i+1,accname: data[i],balance:0,tlm:0,cpu:"",stake:0,cpuusage:0})
       } 
     });
     this.postapi();
     this.gettlm();
-    this.papi = setInterval(() => this.postapi(), 20000);
-    this.gtlm = setInterval(() => this.gettlm(), 20000);
+    this.papi = setInterval(() => this.postapi(), 30000);
+    this.gtlm = setInterval(() => this.gettlm(), 30000);
   },
   beforeDestroy() {
     clearInterval(this.papi)
@@ -87,16 +89,16 @@ name: "Watch",
         this.gettlm();
     },
     async postapi() {
+      // let totalwax = 0;
       for (let i = 0; i < this.items.length; i++) {
         const res = await axios.post("https://chain.wax.io/v1/chain/get_account", 
         JSON.stringify({"account_name": this.items[i].accname}));
         this.items[i].balance = res.data.core_liquid_balance;
-        // let cpuuse = (res.data.cpu_limit.used / res.data.cpu_limit.max)*100;
         this.items[i].cpuusage = (res.data.cpu_limit.used / res.data.cpu_limit.max)*100;
         this.items[i].cpu = "" + res.data.cpu_limit.used/1000 + "ms / " 
-                                + res.data.cpu_limit.max/1000 + "ms " 
-                                // + cpuuse + " %";
-        } 
+                                + res.data.cpu_limit.max/1000 + "ms " ;
+        this.items[i].stake = res.data.self_delegated_bandwidth.cpu_weight;
+      } 
     },
     async gettlm() {
       for (let i = 0; i < this.items.length; i++) {
@@ -107,7 +109,7 @@ name: "Watch",
           "symbol": "TLM"
         }));
         this.items[i].tlm = res.data[0];
-        } 
+      }
     },
     signout() {
        firebase
