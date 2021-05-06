@@ -2,7 +2,7 @@
   <div class="home">
     <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
     <b-button class="button btn-primary" @click="home">Home</b-button>
-    <div>update every 60sec %cpu blue:0-70% yellow:70-100% red>100%</div>
+    <div style="font-size:2vw">update every 20sec %cpu blue:0-70% yellow:70-100% red>100%</div>
     <b-table striped hover :items="items" :fields="fields">
       <template v-slot:cell(index)="row">
         {{ row.index + 1 }}
@@ -31,7 +31,6 @@
          </b-progress>
       </template>
     </b-table>
-    <b-button class="btn" variant="success" @click="forceup">force update</b-button>
     <b-button class="button btn-primary" @click="home">Home</b-button>
   </div>
 </template>
@@ -67,8 +66,8 @@ name: "Watch",
     });
     this.postapi();
     this.gettlm();
-    this.papi = setInterval(() => this.postapi(), 60000);
-    this.gtlm = setInterval(() => this.gettlm(), 60000);
+    this.papi = setInterval(() => this.postapi(), 20000);
+    this.gtlm = setInterval(() => this.gettlm(), 20000);
   },
   beforeDestroy() {
     clearInterval(this.papi)
