@@ -1,8 +1,8 @@
 <template>
   <div id="login" class="main-box">
-    <div>or Sign in with 3rd Party</div>
+    <div style="font-size:5vw">Sign Up and Login with google</div>
     <button id="google" @click="googleSignIn" class="btn-pic">
-      google
+      <img src="../assets/google-logo.png" alt width="1000px" height="1000px">
     </button>
   </div>
 </template>
@@ -18,7 +18,7 @@ export default {
         .auth()
         .signInWithPopup(provider)
         .then((user) => {
-            console.log(user) // User that was authenticated
+            console.log(user.name)
             this.$router.replace("home");
         })
         .catch((err) => {

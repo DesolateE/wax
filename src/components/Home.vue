@@ -1,24 +1,35 @@
 <template>
   <div class="home">
-    <button @click="signout" type="submit" class="btn">Signout</button>
-    <button @click="check" type="submit" class="btn">check</button>
-    <h1>{{account_name}}</h1>
-    <h1>{{core_liquid_balance}}</h1>
+    <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
+    <b-button class="button btn-primary" @click="watch">Watch</b-button>
+  <!-- <button @click="removeRow(row)">Remove</button>
+  <button class="button btn-primary" @click="addRow">Add row</button> -->
+    <b-table striped hover :items="items" :fields="fields">
+      <template v-slot:cell(index)="row">
+        {{ row.index + 1 }}
+      </template>
+      <template v-slot:cell(accname)="row">
+        <b-form-input v-model="row.item.accname" @change="save"/>
+      </template>
+    </b-table>
+    <b-button class="button btn-primary" @click="addRow">Add row</b-button>
+    <b-button class="button btn-danger" @click="removeRow">Remove lastRow</b-button>
+    <b-button class="button btn-primary" @click="watch">Watch</b-button>
   </div>
 
   
 </template>
-
 <script>
 import firebase from "firebase";
 import { mapGetters } from "vuex";
-import axios from 'axios';
+// import axios from 'axios';
 export default {
   name: "Home",
   data() {
     return {
-      account_name: '',
-      core_liquid_balance: '',
+      fields: { Index: "index",accname: "accname"},
+      items: [
+      ]
     };
   },
   beforeCreate() {
@@ -31,6 +42,13 @@ export default {
   created() {
     this.userid = firebase.auth().currentUser.uid;
     this.dbRef = firebase.database().ref('users/'+this.userid);
+    this.dbRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      this.items = [];
+      for (let i = 0; i < data.length; i++) {
+        this.items.push({index:i+1,accname: data[i]})
+      } 
+      });
   },
   computed: {
     ...mapGetters({
@@ -38,24 +56,22 @@ export default {
     })
   },
   methods: {
-    async check() {
-      
-      const res = await axios.post("https://chain.wax.io/v1/chain/get_account", 
-      JSON.stringify({"account_name": "b5kc.wam"}));
-      console.log(res.data)
-
-      this.account_name = res.data.account_name
-      this.core_liquid_balance = res.data.core_liquid_balance
-      // .account_name
-      //.cpu_limit.used
-      //.cpu_limit.available
-      //.cpu_limit.max
-      // .core_liquid_balance
-      // .self_delegated_bandwidth.cpu_weight
-      // this.dbRef.set({
-      //   a: "aaa"
-      // })
-      // console.log("check");
+    watch(){
+      this.$router.replace("/watch")
+    },
+    addRow(){
+      this.items.push({ index:this.items.length+1,accname: ""});
+    },
+    removeRow(){
+      this.items.pop(this.items[this.items.length-1]);
+      this.save();
+    },
+    save() {
+      let arr = [];
+      for (let i = 0; i < this.items.length; i++) {
+          arr.push(this.items[i].accname);
+      }
+      this.dbRef.set(arr);
     }
     ,signout() {
        firebase
