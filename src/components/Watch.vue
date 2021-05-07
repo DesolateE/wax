@@ -3,7 +3,7 @@
     <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
     <b-button class="button btn-primary" @click="home">Home</b-button>
     <b-button class="btn" variant="info" @click="nft">NFT</b-button>
-    <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100% MineTime -7 hours(90sec refresh)</div>
+    <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100% MineTime -7hours(90sec refresh) if ban bg=brown</div>
     <b-table striped hover :items="items" :fields="fields">
       <template v-slot:cell(index)="row">
         {{ row.index + 1 }}
@@ -47,7 +47,10 @@
         <div style="background-color:#ffff66" v-else-if="row.item.lasttlm >= 0.1">
           {{ row.item.lasttlm }} TLM
         </div>
-        <div style="background-color:#ffffcc" v-else>
+        <div style="background-color:#ffffcc" v-else-if="row.item.lasttlm >= 0.001">
+          {{ row.item.lasttlm }} TLM
+        </div>
+        <div style="background-color:#993333" v-else>
           {{ row.item.lasttlm }} TLM
         </div>
       </template>
