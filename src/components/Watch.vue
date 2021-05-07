@@ -4,6 +4,7 @@
     <b-button class="button btn-primary" @click="home">Home</b-button>
     <b-button class="btn" variant="info" @click="nft">NFT</b-button>
     <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100% MineTime -7hours(90sec refresh) if ban bg=brown</div>
+    <b-button class="btn" variant="success" @click="forceup">fouce update</b-button>
     <b-table striped hover :items="items" :fields="fields">
       <template v-slot:cell(index)="row">
         {{ row.index + 1 }}
@@ -47,10 +48,10 @@
         <div style="background-color:#ffff66" v-else-if="row.item.lasttlm >= 0.1">
           {{ row.item.lasttlm }} TLM
         </div>
-        <div style="background-color:#ffffcc" v-else-if="row.item.lasttlm >= 0.001">
+        <div style="background-color:#ffffcc" v-else-if="row.item.lasttlm >= 0.0005">
           {{ row.item.lasttlm }} TLM
         </div>
-        <div style="background-color:#993333" v-else>
+        <div style="background-color:#993333" v-else-if="row.item.lasttlm > 0">
           {{ row.item.lasttlm }} TLM
         </div>
       </template>
@@ -85,7 +86,7 @@ name: "Watch",
     this.dbRef.on('value', (snapshot) => {
       const data = snapshot.val();
       for (let i = 0; i < data.length; i++) {
-        this.items.push({index:i+1,accname: data[i],balance:0,tlm:0,cpu:"",stake:0,cpuusage:0,lasttlm:"",lastmine:''})
+        this.items.push({index:i+1,accname: data[i],balance:0,tlm:0,stake:0,cpu:"",cpuusage:0,lasttlm:"",lastmine:''})
       } 
     });
     this.postapi();
@@ -93,7 +94,7 @@ name: "Watch",
     this.getlastminetx()
     this.papi = setInterval(() => this.postapi(), 30000);
     this.gtlm = setInterval(() => this.gettlm(), 30000);
-    this.glm = setInterval(() => this.getlastminetx(), 90000);
+    this.glm = setInterval(() => this.getlastminetx(), 60000);
   },
   beforeDestroy() {
     clearInterval(this.papi)
@@ -115,6 +116,7 @@ name: "Watch",
     forceup(){
         this.postapi();
         this.gettlm();
+        this.glm();
     },
     async postapi() {
       // let totalwax = 0;
@@ -153,7 +155,7 @@ name: "Watch",
     },
     async getlastmine(txid,i) {
       const res = await axios.get('https://api.waxsweden.org/v2/history/get_transaction?id='+txid);
-      this.items[i].lastmine = res.data.actions[1].timestamp;
+      this.items[i].lastmine = res.data.actions[1].timestamp.split("T")[1];
       this.items[i].lasttlm = res.data.actions[1].act.data.amount;
     },
     signout() {
