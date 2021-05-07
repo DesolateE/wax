@@ -8,31 +8,31 @@
         <b-button class="btn" variant="success" @click="forceup">fouce update</b-button>
         <b-table striped hover :items="items" :fields="fields">
             <template v-slot:cell(index)="row">
-                {{ row.index + 1 }}
+                <div style="font-size:25px">{{ row.index + 1 }}</div>
             </template>
             <template v-slot:cell(accname)="row">
-                {{ row.item.accname }}
+                <div style="font-size:25px">{{ row.item.accname }}</div>
             </template>
             <template v-slot:cell(tlm)="row">
-                {{ row.item.tlm }}
+                <div style="font-size:25px">{{ row.item.tlm }}</div>
             </template>
             <template v-slot:cell(balance)="row">
-                {{ row.item.balance }}
+                <div style="font-size:25px">{{ row.item.balance }}</div>
             </template>
             <template v-slot:cell(stake)="row">
-                {{ row.item.stake }}
+                <div style="font-size:25px">{{ row.item.stake }}</div>
             </template>
             <template v-slot:cell(cpu)="row">
-                {{ row.item.cpu }}
+                <div style="font-size:25px">{{ row.item.cpu }}</div>
             </template>
             <template v-slot:cell(cpuusage)="row">
-                <b-progress class="mt-2" animated show-value v-if="row.item.cpuusage >= 100">
+                <b-progress class="w-500 mb-4" height="40px"  animated show-value v-if="row.item.cpuusage >= 100">
                     <b-progress-bar :value="row.item.cpuusage" variant="danger"></b-progress-bar>
                 </b-progress>
-                <b-progress class="mt-2" animated show-value v-else-if="row.item.cpuusage >= 70">
+                <b-progress class="w-500 mb-4" height="40px"  animated show-value v-else-if="row.item.cpuusage >= 70">
                     <b-progress-bar :value="row.item.cpuusage" variant="warning"></b-progress-bar>
                 </b-progress>
-                <b-progress class="mt-2" animated show-value v-else>
+                <b-progress class="w-500 mb-4" height="40px" animated show-value v-else>
                     <b-progress-bar :value="row.item.cpuusage" variant="info"></b-progress-bar>
                 </b-progress>
             </template>
@@ -40,21 +40,24 @@
                 {{ row.item.lastmine }}
             </template>
             <template v-slot:cell(lasttlm)="row">
-                <div style="background-color:#ff3300" v-if="row.item.lasttlm >= 0.3">
+                <div style="background-color:#ff3300;font-size:25px" v-if="row.item.lasttlm >= 0.3">
                     {{ row.item.lasttlm }} TLM
                 </div>
-                <div style="background-color:#ff9900" v-else-if="row.item.lasttlm >= 0.2">
+                <div style="background-color:#ff9900;font-size:25px" v-else-if="row.item.lasttlm >= 0.2">
                     {{ row.item.lasttlm }} TLM
                 </div>
-                <div style="background-color:#ffff66" v-else-if="row.item.lasttlm >= 0.1">
+                <div style="background-color:#ffff66;font-size:25px" v-else-if="row.item.lasttlm >= 0.1">
                     {{ row.item.lasttlm }} TLM
                 </div>
-                <div style="background-color:#ffffcc" v-else-if="row.item.lasttlm >= 0.0005">
+                <div style="background-color:#ffffcc;font-size:25px" v-else-if="row.item.lasttlm >= 0.0005">
                     {{ row.item.lasttlm }} TLM
                 </div>
-                <div style="background-color:#993333" v-else-if="row.item.lasttlm > 0">
+                <div style="background-color:#993333;font-size:25px" v-else-if="row.item.lasttlm > 0">
                     {{ row.item.lasttlm }} TLM
                 </div>
+            </template>
+            <template v-slot:cell(lastNFT)="row">
+                <img :src= row.item.lastNFT width="120" height="120">
             </template>
         </b-table>
         <p style="font-size:1vw">WaxBalance:<input v-model="waxBalance"> totalTML:<input v-model="tlm"> totalWaxStake:<input v-model="waxStake"></p>
@@ -72,7 +75,7 @@
             return {
                 fields: {
                     Index: "index", accname: "accname", tlm: "tlm", balance: "balance", stake: "stake"
-                    , cpu: "cpu", cpuusage: "cpuusage", lasttlm: "lasttlm", lastmine: "lastmine"
+                    , cpu: "cpu", cpuusage: "cpuusage", lasttlm: "lasttlm", lastmine: "lastmine", lastNFT: "lastNFT"
                 },
                 items: [],
                 waxStake: 0,
@@ -97,21 +100,26 @@
             this.dbRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 for (let i = 0; i < data.length; i++) {
-                    this.items.push({ index: i + 1, accname: data[i], balance: 0, tlm: 0, stake: 0, cpu: "", cpuusage: 0, lasttlm: "", lastmine: '' })
+                    this.items.push({ index: i + 1, accname: data[i], balance: 0, tlm: 0, stake: 0, cpu: "", cpuusage: 0, lasttlm: "", lastmine: '',lastNFT: '' })
                 }
             });
+            // this.getaccount();
             this.postapi();
             this.gettlm();
             this.getlastminetx()
             this.papi = setInterval(() => this.postapi(), 35000);
             this.gtlm = setInterval(() => this.gettlm(), 35000);
             this.glm = setInterval(() => this.getlastminetx(), 60000);
+            this.getlastnft();
+            this.gnft = setInterval(() => this.getlastminetx(), 120000);
+            // this.papi = setInterval(() => this.getaccount(), 40000);
 
         },
         beforeDestroy() {
             clearInterval(this.papi)
             clearInterval(this.gtlm)
             clearInterval(this.glm)
+            clearInterval(this.gnft)
         },
         computed: {
             ...mapGetters({
@@ -130,9 +138,63 @@
                 this.gettlm();
                 this.getlastminetx();
             },
+            async getlastnft(){
+                for (let i = 0; i < this.items.length; i++) {
+                    const res = await axios.get('https://api.waxsweden.org/v2/state/get_account?account='+this.items[i].accname);
+                    for (let j = 0; j < res.data.actions.length; j++) {
+                        if(res.data.actions[j].act.name ==="logmint"){
+                            for (let k = 0; k < res.data.actions[j].act.data.immutable_template_data.length; k++) {
+                                if(res.data.actions[j].act.data.immutable_template_data[k].key === "img"){
+                                    this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + res.data.actions[j].act.data.immutable_template_data[k].value[1];
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            },
+            async getaccount(){
+                this.tlmtemp = 0;
+                this.waxStaketemp = 0;
+                this.waxBalancetemp = 0;
+                for (let i = 0; i < this.items.length; i++) {
+                    const res = await axios.get('https://api.waxsweden.org/v2/state/get_account?account='+this.items[i].accname);
+                    this.items[i].balance = res.data.account.core_liquid_balance;
+                    this.items[i].cpuusage = (res.data.account.cpu_limit.used / res.data.account.cpu_limit.max) * 100;
+                    this.items[i].cpu = "" + res.data.account.cpu_limit.used / 1000 + "ms / "
+                        + res.data.account.cpu_limit.max / 1000 + "ms ";
+                    this.items[i].stake = res.data.account.self_delegated_bandwidth.cpu_weight;
+                    this.items[i].tlm = res.data.tokens[1].amount;
+                    
+                    for (let j = 0; j < 4; j++) {
+                        if(res.data.actions[j].act.name ==="transfer"){
+                            this.items[i].lastmine = res.data.actions[j].timestamp.split("T")[1];
+                            this.items[i].lasttlm = res.data.actions[1].act.data.amount
+                            break;
+                        }
+                    }
+
+                    this.tlmtemp += parseFloat(this.items[i].tlm);
+                    this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
+                    this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
+                    if(i == this.items.length-1){
+                        this.tlm = 0;
+                        this.tlm += this.tlmtemp;
+                        this.waxStake = 0;
+                        this.waxBalance = 0;
+                        this.waxStake += this.waxStaketemp;
+                        this.waxBalance += this.waxBalancetemp;
+                    }
+                }
+            },
             async postapi() {
                 this.waxStaketemp = 0;
                 this.waxBalancetemp = 0;
+                // https://api.waxsweden.org/v2/state/get_account?account=i4qs.wam
+                // .account.core_liquid_balance
+                // .account.cpu_limit.used
+                // .account.self_delegated_bandwidth.cpu_weight
                 for (let i = 0; i < this.items.length; i++) {
                     const res = await axios.post("https://chain.wax.io/v1/chain/get_account",
                         JSON.stringify({ "account_name": this.items[i].accname }));
@@ -154,6 +216,8 @@
             },
             async gettlm() {
                 this.tlmtemp = 0;
+                // .tokens[1].amount   TLM  token[1].symbol="TLM"
+                // .actions[0].act.name =="logmint" /"transfer"
                 for (let i = 0; i < this.items.length; i++) {
                     const res = await axios.post("https://chain.wax.io/v1/chain/get_currency_balance",
                         JSON.stringify({
