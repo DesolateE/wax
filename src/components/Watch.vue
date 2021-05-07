@@ -57,6 +57,7 @@
                 </div>
             </template>
         </b-table>
+        <p style="font-size:1vw">WaxBalance:<input v-model="waxBalance"> totalTML:<input v-model="tlm"> totalWaxStake:<input v-model="waxStake"></p>
         <b-button class="button btn-primary" @click="home">Home</b-button>
         <b-button class="btn" variant="info" @click="nft">NFT</b-button>
     </div>
@@ -76,7 +77,10 @@
                 items: [],
                 waxStake: 0,
                 tlm: 0,
-                waxBalance:0
+                waxBalance:0,
+                waxStaketemp: 0,
+                tlmtemp: 0,
+                waxBalancetemp:0,
             };
         },
         beforeCreate() {
@@ -99,8 +103,8 @@
             this.postapi();
             this.gettlm();
             this.getlastminetx()
-            this.papi = setInterval(() => this.postapi(), 30000);
-            this.gtlm = setInterval(() => this.gettlm(), 30000);
+            this.papi = setInterval(() => this.postapi(), 35000);
+            this.gtlm = setInterval(() => this.gettlm(), 35000);
             this.glm = setInterval(() => this.getlastminetx(), 60000);
 
         },
@@ -124,11 +128,11 @@
             forceup() {
                 this.postapi();
                 this.gettlm();
-                this.glm();
+                this.getlastminetx();
             },
             async postapi() {
-                this.waxStake = 0;
-                this.waxBalance = 0;
+                this.waxStaketemp = 0;
+                this.waxBalancetemp = 0;
                 for (let i = 0; i < this.items.length; i++) {
                     const res = await axios.post("https://chain.wax.io/v1/chain/get_account",
                         JSON.stringify({ "account_name": this.items[i].accname }));
@@ -138,12 +142,18 @@
                         + res.data.cpu_limit.max / 1000 + "ms ";
                     this.items[i].stake = res.data.self_delegated_bandwidth.cpu_weight;
 
-                    this.waxBalance += parseFloat(this.items[i].balance.split("WAX")[0]);
-                    this.waxStake += parseFloat(this.items[i].stake.split("WAX")[0]);
+                    this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
+                    this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
+                    if(i == this.items.length-1){
+                        this.waxStake = 0;
+                        this.waxBalance = 0;
+                        this.waxStake += this.waxStaketemp;
+                        this.waxBalance += this.waxBalancetemp;
+                    }
                 }
             },
             async gettlm() {
-                this.tlm = 0;
+                this.tlmtemp = 0;
                 for (let i = 0; i < this.items.length; i++) {
                     const res = await axios.post("https://chain.wax.io/v1/chain/get_currency_balance",
                         JSON.stringify({
@@ -152,8 +162,11 @@
                             "symbol": "TLM"
                         }));
                     this.items[i].tlm = res.data[0];
-                    this.tlm += parseFloat(this.items[i].tlm.split("TLM")[0]);
-
+                    this.tlmtemp += parseFloat(this.items[i].tlm.split("TLM")[0]);
+                    if(i == this.items.length-1){
+                        this.tlm = 0;
+                        this.tlm += this.tlmtemp;
+                    }
                 }
             },
             async getlastminetx() {
