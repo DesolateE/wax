@@ -2,7 +2,8 @@
   <div class="home">
     <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
     <b-button class="button btn-primary" @click="home">Home</b-button>
-    <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100%</div>
+    <b-button class="btn" variant="info" @click="nft">NFT</b-button>
+    <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100% MineTime -7 hours(90sec refresh)</div>
     <b-table striped hover :items="items" :fields="fields">
       <template v-slot:cell(index)="row">
         {{ row.index + 1 }}
@@ -15,6 +16,12 @@
       </template>
       <template v-slot:cell(balance)="row">
         {{ row.item.balance }}
+      </template>
+      <template v-slot:cell(lastmine)="row">
+        {{ row.item.lastmine }}
+      </template>
+      <template v-slot:cell(lasttlm)="row">
+        {{ row.item.lasttlm }}
       </template>
       <template v-slot:cell(stake)="row">
         {{ row.item.stake }}
@@ -34,8 +41,8 @@
          </b-progress>
       </template>
     </b-table>
-    <b-button class="button btn-primary" @click="gettotal">gettotal</b-button>
     <b-button class="button btn-primary" @click="home">Home</b-button>
+    <b-button class="btn" variant="info" @click="nft">NFT</b-button>
   </div>
 </template>
 <script>
@@ -46,7 +53,8 @@ export default {
 name: "Watch",
   data() {
     return {
-      fields: { Index: "index",accname: "accname",tlm: "tlm", balance: "balance",stake: "stake",cpu: "cpu",cpuusage: "cpuusage" },
+      fields: { Index: "index",accname: "accname",tlm: "tlm", balance: "balance",stake: "stake"
+          ,cpu: "cpu",cpuusage: "cpuusage",lasttlm: "lasttlm",lastmine: "lastmine" },
       items: []
     };
   },
@@ -63,17 +71,20 @@ name: "Watch",
     this.dbRef.on('value', (snapshot) => {
       const data = snapshot.val();
       for (let i = 0; i < data.length; i++) {
-        this.items.push({index:i+1,accname: data[i],balance:0,tlm:0,cpu:"",stake:0,cpuusage:0})
+        this.items.push({index:i+1,accname: data[i],balance:0,tlm:0,cpu:"",stake:0,cpuusage:0,lasttlm:"",lastmine:''})
       } 
     });
     this.postapi();
     this.gettlm();
+    this.getlastminetx()
     this.papi = setInterval(() => this.postapi(), 30000);
     this.gtlm = setInterval(() => this.gettlm(), 30000);
+    this.glm = setInterval(() => this.getlastminetx(), 90000);
   },
   beforeDestroy() {
     clearInterval(this.papi)
     clearInterval(this.gtlm)
+    clearInterval(this.glm)
   },
   computed: {
     ...mapGetters({
@@ -83,6 +94,9 @@ name: "Watch",
   methods: {
     home(){
       this.$router.replace("/home")
+    },
+    nft(){
+      this.$router.replace("/nft")
     },
     forceup(){
         this.postapi();
@@ -110,6 +124,23 @@ name: "Watch",
         }));
         this.items[i].tlm = res.data[0];
       }
+    },
+    async getlastminetx() {
+      for (let i = 0; i < this.items.length; i++) {
+        const res = await axios.post('https://wax.pink.gg/v1/chain/get_table_rows', 
+                {json: true,
+                code: "m.federation",
+                scope: "m.federation",
+                table: 'miners',
+                lower_bound: this.items[i].accname,
+                upper_bound: this.items[i].accname});
+        this.getlastmine(res.data.rows[0].last_mine_tx,i);
+      }
+    },
+    async getlastmine(txid,i) {
+      const res = await axios.get('https://api.waxsweden.org/v2/history/get_transaction?id='+txid);
+      this.items[i].lastmine = res.data.actions[1].timestamp;
+      this.items[i].lasttlm = res.data.actions[1].act.data.quantity;
     },
     signout() {
        firebase

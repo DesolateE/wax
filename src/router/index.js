@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Home from '../components/Home.vue'
 import LoginPage from '../components/LoginPage.vue'
 import Watch from '../components/Watch.vue'
+import Nft from '../components/Nft.vue'
 
 Vue.use(VueRouter)
 
@@ -21,6 +22,11 @@ const routes = [
     path: '/watch',
     name: 'watch',
     component: Watch
+  },
+  {
+    path: '/nft',
+    name: 'nft',
+    component: Nft
   }
 ]
 
