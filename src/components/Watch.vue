@@ -17,12 +17,6 @@
       <template v-slot:cell(balance)="row">
         {{ row.item.balance }}
       </template>
-      <template v-slot:cell(lastmine)="row">
-        {{ row.item.lastmine }}
-      </template>
-      <template v-slot:cell(lasttlm)="row">
-        {{ row.item.lasttlm }}
-      </template>
       <template v-slot:cell(stake)="row">
         {{ row.item.stake }}
       </template>
@@ -39,6 +33,23 @@
          <b-progress class="mt-2" animated show-value v-else>
             <b-progress-bar :value="row.item.cpuusage" variant="info"></b-progress-bar>
          </b-progress>
+      </template>
+      <template v-slot:cell(lastmine)="row">
+        {{ row.item.lastmine }}
+      </template>
+      <template v-slot:cell(lasttlm)="row">
+        <div style="background-color:#ff3300" v-if="row.item.lasttlm >= 0.3">
+          {{ row.item.lasttlm }} TLM
+        </div>
+        <div style="background-color:#ff9900" v-else-if="row.item.lasttlm >= 0.2">
+          {{ row.item.lasttlm }} TLM
+        </div>
+        <div style="background-color:#ffff66" v-else-if="row.item.lasttlm >= 0.1">
+          {{ row.item.lasttlm }} TLM
+        </div>
+        <div style="background-color:#ffffcc" v-else>
+          {{ row.item.lasttlm }} TLM
+        </div>
       </template>
     </b-table>
     <b-button class="button btn-primary" @click="home">Home</b-button>
@@ -140,7 +151,7 @@ name: "Watch",
     async getlastmine(txid,i) {
       const res = await axios.get('https://api.waxsweden.org/v2/history/get_transaction?id='+txid);
       this.items[i].lastmine = res.data.actions[1].timestamp;
-      this.items[i].lasttlm = res.data.actions[1].act.data.quantity;
+      this.items[i].lasttlm = res.data.actions[1].act.data.amount;
     },
     signout() {
        firebase
