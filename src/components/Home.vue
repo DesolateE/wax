@@ -18,6 +18,8 @@
     <b-button class="btn" variant="primary" @click="watch">Watch</b-button>
     <b-button class="btn" variant="info" @click="nft">NFT</b-button>
   </div>
+
+  
 </template>
 <script>
 import firebase from "firebase";
