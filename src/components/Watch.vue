@@ -3,7 +3,8 @@
         <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
         <b-button class="button btn-primary" @click="home">Home</b-button>
         <b-button class="btn" variant="info" @click="nft">NFT</b-button>
-        <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100% MineTime -7hours(90sec refresh) if ban bg=brown</div>
+        <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100% MineTime </div>
+        <div style="font-size:2vw">MineTime -7hours(90sec refresh) if lastmine>15min bg=red /NFT(120sec refresh) </div>
         <p style="font-size:1vw">WaxBalance:<input v-model="waxBalance"> totalTML:<input v-model="tlm"> totalWaxStake:<input v-model="waxStake"></p>
         <b-button class="btn" variant="success" @click="forceup">fouce update</b-button>
         <b-table striped hover :items="items" :fields="fields">
@@ -37,7 +38,12 @@
                 </b-progress>
             </template>
             <template v-slot:cell(lastmine)="row">
-                {{ row.item.lastmine }}
+                <div style="background-color:#ff3300;font-size:25px" v-if="row.item.lastmine >= 15">
+                    {{ row.item.lastmine }} Minutes ago
+                </div>
+                <div style="font-size:25px" v-else>
+                    {{ row.item.lastmine }} Minutes ago
+                </div>
             </template>
             <template v-slot:cell(lasttlm)="row">
                 <div style="background-color:#ff3300;font-size:25px" v-if="row.item.lasttlm >= 0.3">
@@ -243,7 +249,7 @@
             },
             async getlastmine(txid, i) {
                 const res = await axios.get('https://api.waxsweden.org/v2/history/get_transaction?id=' + txid);
-                this.items[i].lastmine = res.data.actions[1].timestamp.split("T")[1];
+                this.items[i].lastmine = Math.floor((Date.now()-Date.parse(res.data.actions[1].timestamp)-25200000)/(60000))
                 this.items[i].lasttlm = res.data.actions[1].act.data.amount;
             },
             signout() {
