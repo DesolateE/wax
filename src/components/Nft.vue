@@ -69,14 +69,14 @@ name: "Nft",
       this.$router.replace("/watch")
     },
     async fetchdata(){
-      let group = Math.ceil(this.items.length/4)
+      let group = Math.ceil(this.items.length/3)
       for(let i=0;i<group;i++){
         for (let j = 3*i; j < 3*(i+1); j++) {
           // console.log(j)
           if(j < this.items.length)
             this.getacctemplate(j)
         }
-        await this.delay(5000)
+        await this.delay(2000)
       }
     },
     async getacctemplate(index){
