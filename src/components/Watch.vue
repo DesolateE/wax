@@ -111,7 +111,7 @@
             this.gtlm = setInterval(() => this.gettlm(), 35000);
             this.glm = setInterval(() => this.getlastminetx(), 60000);
             this.getlastnft();
-            this.gnft = setInterval(() => this.getlastminetx(), 120000);
+            this.gnft = setInterval(() => this.getlastnft(), 120000);
             // this.papi = setInterval(() => this.getaccount(), 40000);
 
         },
@@ -191,10 +191,6 @@
             async postapi() {
                 this.waxStaketemp = 0;
                 this.waxBalancetemp = 0;
-                // https://api.waxsweden.org/v2/state/get_account?account=i4qs.wam
-                // .account.core_liquid_balance
-                // .account.cpu_limit.used
-                // .account.self_delegated_bandwidth.cpu_weight
                 for (let i = 0; i < this.items.length; i++) {
                     const res = await axios.post("https://chain.wax.io/v1/chain/get_account",
                         JSON.stringify({ "account_name": this.items[i].accname }));
@@ -216,8 +212,6 @@
             },
             async gettlm() {
                 this.tlmtemp = 0;
-                // .tokens[1].amount   TLM  token[1].symbol="TLM"
-                // .actions[0].act.name =="logmint" /"transfer"
                 for (let i = 0; i < this.items.length; i++) {
                     const res = await axios.post("https://chain.wax.io/v1/chain/get_currency_balance",
                         JSON.stringify({
