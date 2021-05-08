@@ -38,15 +38,16 @@
                 </b-progress>
             </template>
             <template v-slot:cell(lastmine)="row">
-                <div style="background-color:#ff3300;font-size:20px" v-if="row.item.lastmine >= 15">
+                <div style="background-color:#ff3300;font-size:25px" v-if="row.item.lastmine >= 15">
                     {{ row.item.lastmine }} Minutes ago
                 </div>
-                <div style="background-color:#ffb84d;font-size:20px" v-else-if="row.item.lastmine >= 10">
+                <div style="background-color:#ffb84d;font-size:25px" v-else-if="row.item.lastmine >= 10">
                     {{ row.item.lastmine }} Minutes ago
                 </div>
-                <div style="font-size:20px" v-else-if="row.item.lastmine > 0">
+                <div style="font-size:25px" v-else>
                     {{ row.item.lastmine }} Minutes ago
                 </div>
+                <!-- {{ row.item.lastmine }} -->
             </template>
             <template v-slot:cell(lasttlm)="row">
                 <div style="background-color:#ff3300;font-size:25px" v-if="row.item.lasttlm >= 0.3">
@@ -112,17 +113,17 @@
                     this.items.push({ index: i + 1, accname: data[i], balance: 0, tlm: 0, stake: 0, cpu: "", cpuusage: 0, lasttlm: "", lastmine: '',lastNFT: '' })
                 }
             });
-            // this.getaccount();
-            // this.postapi();
-            // this.gettlm();
-            // this.getlastminetx()
-            // this.papi = setInterval(() => this.postapi(), 35000);
-            // this.gtlm = setInterval(() => this.gettlm(), 35000);
-            // this.glm = setInterval(() => this.getlastminetx(), 30000);
-            this.pp();
-            this.getacc = setInterval(() => this.pp(), 30000);
-            // this.getlastnft();
-            // this.gnft = setInterval(() => this.getlastnft(), 120000);
+            this.getaccount();
+            this.postapi();
+            this.gettlm();
+            this.getlastminetx()
+            this.papi = setInterval(() => this.postapi(), 30000);
+            this.gtlm = setInterval(() => this.gettlm(), 30000);
+            this.glm = setInterval(() => this.getlastminetx(), 30000);
+            // this.pp();
+            // this.getacc = setInterval(() => this.pp(), 25000);
+            this.getlastnft();
+            this.gnft = setInterval(() => this.getlastnft(), 120000);
 
         },
         beforeDestroy() {
@@ -130,7 +131,7 @@
             clearInterval(this.gtlm)
             clearInterval(this.glm)
             clearInterval(this.gnft)
-            clearInterval(this.getacc)
+            // clearInterval(this.getacc)
         },
         computed: {
             ...mapGetters({
@@ -190,8 +191,8 @@
                     
                         for (let j = 0; j < 4; j++) {
                             if(response.data.actions[j].act.name ==="transfer"){
-                                // this.items[i].lastmine = response.data.actions[j].timestamp;
-                                this.items[i].lastmine = Math.floor((Date.now()-Date.parse(response.data.actions[j].timestamp)-25200000)/(60000))
+                                // this.items[i].lastmine = response.data.actions[j].timestamp
+                                this.items[i].lastmine = Math.floor((Date.now()-Date.parse(response.data.actions[j].timestamp)-25200000)/(60000));
                                 this.items[i].lasttlm = response.data.actions[j].act.data.amount;
                                 break;
                             }
