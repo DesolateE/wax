@@ -113,15 +113,16 @@
                 }
             });
             // this.getaccount();
-            this.postapi();
-            this.gettlm();
-            this.getlastminetx()
-            this.papi = setInterval(() => this.postapi(), 35000);
-            this.gtlm = setInterval(() => this.gettlm(), 35000);
-            this.glm = setInterval(() => this.getlastminetx(), 60000);
-            this.getlastnft();
-            this.gnft = setInterval(() => this.getlastnft(), 120000);
-            // this.getacc = setInterval(() => this.getaccount(), 40000);
+            // this.postapi();
+            // this.gettlm();
+            // this.getlastminetx()
+            // this.papi = setInterval(() => this.postapi(), 35000);
+            // this.gtlm = setInterval(() => this.gettlm(), 35000);
+            // this.glm = setInterval(() => this.getlastminetx(), 30000);
+            this.pp();
+            this.getacc = setInterval(() => this.pp(), 30000);
+            // this.getlastnft();
+            // this.gnft = setInterval(() => this.getlastnft(), 120000);
 
         },
         beforeDestroy() {
@@ -129,6 +130,7 @@
             clearInterval(this.gtlm)
             clearInterval(this.glm)
             clearInterval(this.gnft)
+            clearInterval(this.getacc)
         },
         computed: {
             ...mapGetters({
@@ -163,39 +165,66 @@
                     }
                 }
             },
-            async getaccount(){
+            async pp(){
                 this.tlmtemp = 0;
                 this.waxStaketemp = 0;
                 this.waxBalancetemp = 0;
                 for (let i = 0; i < this.items.length; i++) {
-                    const res = await axios.get('https://api.waxsweden.org/v2/state/get_account?account='+this.items[i].accname);
-                    this.items[i].balance = res.data.account.core_liquid_balance;
-                    this.items[i].cpuusage = (res.data.account.cpu_limit.used / res.data.account.cpu_limit.max) * 100;
-                    this.items[i].cpu = "" + res.data.account.cpu_limit.used / 1000 + "ms / "
-                        + res.data.account.cpu_limit.max / 1000 + "ms ";
-                    this.items[i].stake = res.data.account.self_delegated_bandwidth.cpu_weight;
-                    this.items[i].tlm = res.data.tokens[1].amount;
+                    this.getaccount(i);
+                }
+            },
+            async getaccount(i){
+                    await axios.get('https://api.waxsweden.org/v2/state/get_account?account='+this.items[i].accname)
+                    // .then(response => {
+                    // })
+                    // .catch(error => {
+                    // this.errorMessage = error.message;
+                    //  });
+                    .then(response => {
+                        this.items[i].balance = response.data.account.core_liquid_balance;
+                        this.items[i].cpuusage = (response.data.account.cpu_limit.used / response.data.account.cpu_limit.max) * 100;
+                        this.items[i].cpu = "" + response.data.account.cpu_limit.used / 1000 + "ms / "
+                        + response.data.account.cpu_limit.max / 1000 + "ms ";
+                        this.items[i].stake = response.data.account.self_delegated_bandwidth.cpu_weight;
+                        this.items[i].tlm = response.data.tokens[1].amount;
                     
-                    for (let j = 0; j < 4; j++) {
-                        if(res.data.actions[j].act.name ==="transfer"){
-                            this.items[i].lastmine = Math.floor((Date.now()-Date.parse(res.data.actions[1].timestamp)-25200000)/(60000))
-                            this.items[i].lasttlm = res.data.actions[1].act.data.amount
+                        for (let j = 0; j < 4; j++) {
+                            if(response.data.actions[j].act.name ==="transfer"){
+                                // this.items[i].lastmine = response.data.actions[j].timestamp;
+                                this.items[i].lastmine = Math.floor((Date.now()-Date.parse(response.data.actions[j].timestamp)-25200000)/(60000))
+                                this.items[i].lasttlm = response.data.actions[j].act.data.amount;
+                                break;
+                            }
+                            
+                            this.tlmtemp += parseFloat(this.items[i].tlm);
+                            this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
+                            this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
+                            if(i == this.items.length-1){
+                                this.tlm = 0;
+                                this.tlm += this.tlmtemp;
+                                this.waxStake = 0;
+                                this.waxBalance = 0;
+                                this.waxStake += this.waxStaketemp;
+                                this.waxBalance += this.waxBalancetemp;
+                            }
+                        }
+                        for (let j = 0; j < response.data.actions.length; j++) {
+                        if(response.data.actions[j].act.name ==="logmint"){
+                            for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
+                                if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
+                                    this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
+                                    break;
+                                }
+                            }
                             break;
                         }
-                    }
-
-                    this.tlmtemp += parseFloat(this.items[i].tlm);
-                    this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
-                    this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
-                    if(i == this.items.length-1){
-                        this.tlm = 0;
-                        this.tlm += this.tlmtemp;
-                        this.waxStake = 0;
-                        this.waxBalance = 0;
-                        this.waxStake += this.waxStaketemp;
-                        this.waxBalance += this.waxBalancetemp;
-                    }
-                }
+                        }
+                    })
+                    .catch(error => {
+                    this.errorMessage = error.message;
+                    this.getaccount(i)
+                     });
+                
             },
             async postapi() {
                 this.waxStaketemp = 0;
