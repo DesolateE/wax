@@ -38,10 +38,13 @@
                 </b-progress>
             </template>
             <template v-slot:cell(lastmine)="row">
-                <div style="background-color:#ff3300;font-size:25px" v-if="row.item.lastmine >= 15">
+                <div style="background-color:#ff3300;font-size:20px" v-if="row.item.lastmine >= 15">
                     {{ row.item.lastmine }} Minutes ago
                 </div>
-                <div style="font-size:25px" v-else>
+                <div style="background-color:#ffb84d;font-size:20px" v-else-if="row.item.lastmine >= 10">
+                    {{ row.item.lastmine }} Minutes ago
+                </div>
+                <div style="font-size:20px" v-else-if="row.item.lastmine > 0">
                     {{ row.item.lastmine }} Minutes ago
                 </div>
             </template>
@@ -118,7 +121,7 @@
             this.glm = setInterval(() => this.getlastminetx(), 60000);
             this.getlastnft();
             this.gnft = setInterval(() => this.getlastnft(), 120000);
-            // this.papi = setInterval(() => this.getaccount(), 40000);
+            // this.getacc = setInterval(() => this.getaccount(), 40000);
 
         },
         beforeDestroy() {
@@ -146,7 +149,7 @@
             },
             async getlastnft(){
                 for (let i = 0; i < this.items.length; i++) {
-                    const res = await axios.get('https://api.waxsweden.org/v2/state/get_account?account='+this.items[i].accname);
+                    const res = await axios.get('https://hyperion.wax.eosdetroit.io/v2/state/get_account?account='+this.items[i].accname);
                     for (let j = 0; j < res.data.actions.length; j++) {
                         if(res.data.actions[j].act.name ==="logmint"){
                             for (let k = 0; k < res.data.actions[j].act.data.immutable_template_data.length; k++) {
@@ -175,7 +178,7 @@
                     
                     for (let j = 0; j < 4; j++) {
                         if(res.data.actions[j].act.name ==="transfer"){
-                            this.items[i].lastmine = res.data.actions[j].timestamp.split("T")[1];
+                            this.items[i].lastmine = Math.floor((Date.now()-Date.parse(res.data.actions[1].timestamp)-25200000)/(60000))
                             this.items[i].lasttlm = res.data.actions[1].act.data.amount
                             break;
                         }
