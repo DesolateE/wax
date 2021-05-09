@@ -116,19 +116,19 @@
             // this.getaccount();
             this.postapi();
             this.gettlm();
-            this.getlastminetx()
+            // this.getlastminetx()
             this.papi = setInterval(() => this.postapi(), 30000);
             this.gtlm = setInterval(() => this.gettlm(), 30000);
-            this.glm = setInterval(() => this.getlastminetx(), 30000);
+            // this.glm = setInterval(() => this.getlastminetx(), 30000);
             this.pp();
             // this.getacc = setInterval(() => this.pp(), 25000);
             // this.getlastnft();
-            this.gnft = setInterval(() => this.pp(), 120000);
+            this.gnft = setInterval(() => this.pp(), 30000);
 
         },
         beforeDestroy() {
             clearInterval(this.papi)
-            clearInterval(this.gtlm)
+            // clearInterval(this.gtlm)
             clearInterval(this.glm)
             clearInterval(this.gnft)
             // clearInterval(this.getacc)
@@ -148,34 +148,19 @@
             forceup() {
                 this.postapi();
                 this.gettlm();
-                this.getlastminetx();
-            },
-            async getlastnft(i){
-                await axios.get('https://api.waxsweden.org/v2/state/get_account?account='+this.items[i].accname)
-                .then(response => {
-                    for (let j = 0; j < response.data.actions.length; j++) {
-                        if(response.data.actions[j].act.name ==="logmint"){
-                            for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
-                                if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
-                                    this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                    }
-                })
-                .catch(error => {
-                    this.errorMessage = error.message;
-                    this.getlastnft(i)
-                });
+                this.pp();
             },
             async pp(){
                 // this.tlmtemp = 0;
                 // this.waxStaketemp = 0;
                 // this.waxBalancetemp = 0;
                 for (let i = 0; i < this.items.length; i++) {
-                    this.getlastnft(i);
+                    this.getlastmine(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
+                    this.getlastnft(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
+                    // this.getlastmine(i,'https://api.waxsweden.org/v2/state/get_account?account=');
+                    // this.getlastnft(i,'https://api.waxsweden.org/v2/state/get_account?account=');
+                    this.getlastmine(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
+                    this.getlastnft(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
                     // this.getaccount(i);
                 }
             },
@@ -271,24 +256,60 @@
                     }
                 }
             },
-            async getlastminetx() {
-                for (let i = 0; i < this.items.length; i++) {
-                    const res = await axios.post('https://wax.pink.gg/v1/chain/get_table_rows',
-                        {
-                            json: true,
-                            code: "m.federation",
-                            scope: "m.federation",
-                            table: 'miners',
-                            lower_bound: this.items[i].accname,
-                            upper_bound: this.items[i].accname
-                        });
-                    this.getlastmine(res.data.rows[0].last_mine_tx, i);
-                }
+            // async getlastminetx(i,url) {
+            //         await axios.post('https://wax.pink.gg/v1/chain/get_table_rows',
+            //             {
+            //                 json: true,
+            //                 code: "m.federation",
+            //                 scope: "m.federation",
+            //                 table: 'miners',
+            //                 lower_bound: this.items[i].accname,
+            //                 upper_bound: this.items[i].accname
+            //             })
+            //         .then(response => {
+            //             this.getlastmine(url+response.data.rows[0].last_mine_tx, i);
+            //         })
+            //         .catch(error => {
+            //             this.errorMessage = error.message;
+            //             this.getlastmine(i,url);
+            //         });
+                
+            // },
+            async getlastmine(i,url) {
+                await axios.get(url+this.items[i].accname)
+                .then(response => {
+                    for (let j = 0; j < 4; j++) {
+                        if(response.data.actions[j].act.name ==="transfer" && response.data.actions[j].act.account === "alien.worlds"){
+                            this.items[i].lastmine = Math.floor((Date.now()-Date.parse(response.data.actions[j].timestamp)-25200000)/(60000));
+                            this.items[i].lasttlm = response.data.actions[j].act.data.amount;
+                            break;
+                        }
+                    }
+                })
+                .catch(error => {
+                this.errorMessage = error.message;
+                this.getlastmine(i,url);
+                 });
             },
-            async getlastmine(txid, i) {
-                const res = await axios.get('https://api.waxsweden.org/v2/history/get_transaction?id=' + txid);
-                this.items[i].lastmine = Math.floor((Date.now()-Date.parse(res.data.actions[1].timestamp)-25200000)/(60000))
-                this.items[i].lasttlm = res.data.actions[1].act.data.amount;
+            async getlastnft(i,url){
+                await axios.get(url+this.items[i].accname)
+                .then(response => {
+                    for (let j = 0; j < response.data.actions.length; j++) {
+                        if(response.data.actions[j].act.name ==="logmint"){
+                            for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
+                                if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
+                                    this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                })
+                .catch(error => {
+                    this.errorMessage = error.message;
+                    this.getlastnft(i)
+                });
             },
             signout() {
                 firebase
