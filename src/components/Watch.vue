@@ -3,7 +3,7 @@
         <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
         <b-button class="button btn-primary" @click="home">Home</b-button>
         <b-button class="btn" variant="info" @click="nft">NFT</b-button>
-        <div style="font-size:2vw">update every 30sec %cpu blue:0-70% yellow:70-100% red>100% MineTime </div>
+        <div style="font-size:2vw">update every 30sec %cpu blue:0-80% yellow:80-100% red>100% MineTime </div>
         <div style="font-size:2vw">MineTime -7hours(90sec refresh) if lastmine>15min bg=red /NFT(120sec refresh) </div>
         <p style="font-size:1vw">WaxBalance:<input v-model="waxBalance"> totalTML:<input v-model="tlm"> totalWaxStake:<input v-model="waxStake"></p>
         <b-button class="btn" variant="success" @click="forceup">fouce update</b-button>
@@ -30,7 +30,7 @@
                 <b-progress class="w-500 mb-4" height="40px"  animated show-value v-if="row.item.cpuusage >= 100">
                     <b-progress-bar :value="row.item.cpuusage" variant="danger"></b-progress-bar>
                 </b-progress>
-                <b-progress class="w-500 mb-4" height="40px"  animated show-value v-else-if="row.item.cpuusage >= 70">
+                <b-progress class="w-500 mb-4" height="40px"  animated show-value v-else-if="row.item.cpuusage >= 80">
                     <b-progress-bar :value="row.item.cpuusage" variant="warning"></b-progress-bar>
                 </b-progress>
                 <b-progress class="w-500 mb-4" height="40px" animated show-value v-else>
@@ -114,11 +114,11 @@
                 }
             });
             // this.getaccount();
-            this.postapi();
-            this.gettlm();
+            // this.postapi();
+            // this.gettlm();
             // this.getlastminetx()
-            this.papi = setInterval(() => this.postapi(), 30000);
-            this.gtlm = setInterval(() => this.gettlm(), 30000);
+            // this.papi = setInterval(() => this.postapi(), 30000);
+            // this.gtlm = setInterval(() => this.gettlm(), 30000);
             // this.glm = setInterval(() => this.getlastminetx(), 30000);
             this.pp();
             // this.getacc = setInterval(() => this.pp(), 25000);
@@ -127,9 +127,9 @@
 
         },
         beforeDestroy() {
-            clearInterval(this.papi)
+            // clearInterval(this.papi)
             // clearInterval(this.gtlm)
-            clearInterval(this.glm)
+            // clearInterval(this.glm)
             clearInterval(this.gnft)
             // clearInterval(this.getacc)
         },
@@ -151,52 +151,59 @@
                 this.pp();
             },
             async pp(){
-                // this.tlmtemp = 0;
-                // this.waxStaketemp = 0;
-                // this.waxBalancetemp = 0;
+                this.tlmtemp = 0;
+                this.waxStaketemp = 0;
+                this.waxBalancetemp = 0;
                 for (let i = 0; i < this.items.length; i++) {
-                    this.getlastmine(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
+                    // this.getlastmine(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
                     this.getlastnft(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
                     // this.getlastmine(i,'https://api.waxsweden.org/v2/state/get_account?account=');
                     // this.getlastnft(i,'https://api.waxsweden.org/v2/state/get_account?account=');
-                    this.getlastmine(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
-                    this.getlastnft(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
-                    // this.getaccount(i);
+                    // this.getlastmine(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
+                    // this.getlastnft(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
+                    this.getaccount(i,'https://wax.blokcrafters.io/v2/state/get_account?account=')
                 }
             },
-            async getaccount(i){
-                    await axios.get('https://api.waxsweden.org/v2/state/get_account?account='+this.items[i].accname)
-                    // .then(response => {
-                    // })
-                    // .catch(error => {
-                    // this.errorMessage = error.message;
-                    //  });
+            async totalcal(){
+                this.delay(2000)
+                this.tlmtemp = 0;
+                this.waxStaketemp = 0;
+                this.waxBalancetemp = 0;
+                for (let i = 0; i < this.items.length; i++) {
+                    this.tlmtemp += parseFloat(this.items[i].tlm.split("TLM")[0]);
+                        this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
+                        this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
+                        if(i == this.items.length-1){
+                            this.tlm = 0;
+                            this.tlm += this.tlmtemp;
+                            this.waxStake = 0;
+                            this.waxBalance = 0;
+                            this.waxStake += this.waxStaketemp;
+                            this.waxBalance += this.waxBalancetemp;
+                        }
+                        console.log(this.items[i])
+                }
+            },
+            async getaccount(i,url){
+                    await axios.get(url+this.items[i].accname)
                     .then(response => {
                         this.items[i].balance = response.data.account.core_liquid_balance;
                         this.items[i].cpuusage = (response.data.account.cpu_limit.used / response.data.account.cpu_limit.max) * 100;
                         this.items[i].cpu = "" + response.data.account.cpu_limit.used / 1000 + "ms / "
                         + response.data.account.cpu_limit.max / 1000 + "ms ";
                         this.items[i].stake = response.data.account.self_delegated_bandwidth.cpu_weight;
-                        this.items[i].tlm = response.data.tokens[1].amount;
+                        for(let t = 0;t < response.data.tokens.length; t++){
+                            if(response.data.tokens[t].symbol === "TLM"){
+                                this.items[i].tlm = ""+response.data.tokens[t].amount+" TLM";
+                                break;
+                            }
+                        }
                     
                         for (let j = 0; j < 4; j++) {
-                            if(response.data.actions[j].act.name ==="transfer"){
-                                // this.items[i].lastmine = response.data.actions[j].timestamp
+                            if(response.data.actions[j].act.name ==="transfer" && response.data.actions[j].act.account === "alien.worlds"){
                                 this.items[i].lastmine = Math.floor((Date.now()-Date.parse(response.data.actions[j].timestamp)-25200000)/(60000));
                                 this.items[i].lasttlm = response.data.actions[j].act.data.amount;
                                 break;
-                            }
-                            
-                            this.tlmtemp += parseFloat(this.items[i].tlm);
-                            this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
-                            this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
-                            if(i == this.items.length-1){
-                                this.tlm = 0;
-                                this.tlm += this.tlmtemp;
-                                this.waxStake = 0;
-                                this.waxBalance = 0;
-                                this.waxStake += this.waxStaketemp;
-                                this.waxBalance += this.waxBalancetemp;
                             }
                         }
                         for (let j = 0; j < response.data.actions.length; j++) {
@@ -210,12 +217,29 @@
                             break;
                         }
                         }
+                        this.delay(2000)
+                        this.tlmtemp += parseFloat(this.items[i].tlm.split("TLM")[0]);
+                        this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
+                        this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
+                        if(i == this.items.length-1){
+                            this.delay(2000)
+                            this.tlm = 0;
+                            this.tlm += this.tlmtemp;
+                            this.waxStake = 0;
+                            this.waxBalance = 0;
+                            this.waxStake += this.waxStaketemp;
+                            this.waxBalance += this.waxBalancetemp;
+
+                        }
                     })
                     .catch(error => {
                     this.errorMessage = error.message;
-                    this.getaccount(i)
+                    this.getaccount(i,url)
                      });
                 
+            },
+            async delay(ms) {
+                return new Promise((resolve) => setTimeout(resolve, ms));
             },
             async postapi() {
                 this.waxStaketemp = 0;
