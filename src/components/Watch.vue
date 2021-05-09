@@ -69,6 +69,11 @@
             <template v-slot:cell(lastNFT)="row">
                 <img :src= row.item.lastNFT width="120" height="120">
             </template>
+            <template v-slot:cell(timeupdate)="row">
+                <div style="font-size:25px">
+                {{row.item.timeupdate}}
+                </div>
+            </template>
         </b-table>
         <p style="font-size:1vw">WaxBalance:<input v-model="waxBalance"> totalTML:<input v-model="tlm"> totalWaxStake:<input v-model="waxStake"></p>
         <b-button class="button btn-primary" @click="home">Home</b-button>
@@ -86,6 +91,7 @@
                 fields: {
                     Index: "index", accname: "accname", tlm: "tlm", balance: "balance", stake: "stake"
                     , cpu: "cpu", cpuusage: "cpuusage", lasttlm: "lasttlm", lastmine: "lastmine", lastNFT: "lastNFT"
+                    ,timeupdate:"timeupdate"
                 },
                 items: [],
                 waxStake: 0,
@@ -110,7 +116,7 @@
             this.dbRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 for (let i = 0; i < data.length; i++) {
-                    this.items.push({ index: i + 1, accname: data[i], balance: 0, tlm: 0, stake: 0, cpu: "", cpuusage: 0, lasttlm: "", lastmine: '',lastNFT: '' })
+                    this.items.push({ index: i + 1, accname: data[i], balance: 0, tlm: 0, stake: 0, cpu: "", cpuusage: 0, lasttlm: "", lastmine: '',lastNFT: '',timeupdate:'' })
                 }
             });
             // this.getaccount();
@@ -217,7 +223,6 @@
                             break;
                         }
                         }
-                        this.delay(2000)
                         this.tlmtemp += parseFloat(this.items[i].tlm.split("TLM")[0]);
                         this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
                         this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
@@ -229,7 +234,13 @@
                             this.waxBalance = 0;
                             this.waxStake += this.waxStaketemp;
                             this.waxBalance += this.waxBalancetemp;
-
+                        }
+                        var time = new Date();
+                        this.items[i].timeupdate = ""+time.getHours() +":"
+                        if(time.getMinutes() <= 9){
+                            this.items[i].timeupdate = this.items[i].timeupdate + "0" + time.getMinutes()
+                        }else{
+                            this.items[i].timeupdate += time.getMinutes()
                         }
                     })
                     .catch(error => {
