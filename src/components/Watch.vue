@@ -123,7 +123,7 @@
             this.pp();
             // this.getacc = setInterval(() => this.pp(), 25000);
             // this.getlastnft();
-            this.gnft = setInterval(() => this.getlastnft(), 120000);
+            this.gnft = setInterval(() => this.pp(), 120000);
 
         },
         beforeDestroy() {
