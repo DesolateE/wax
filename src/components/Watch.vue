@@ -113,16 +113,16 @@
                     this.items.push({ index: i + 1, accname: data[i], balance: 0, tlm: 0, stake: 0, cpu: "", cpuusage: 0, lasttlm: "", lastmine: '',lastNFT: '' })
                 }
             });
-            this.getaccount();
+            // this.getaccount();
             this.postapi();
             this.gettlm();
             this.getlastminetx()
             this.papi = setInterval(() => this.postapi(), 30000);
             this.gtlm = setInterval(() => this.gettlm(), 30000);
             this.glm = setInterval(() => this.getlastminetx(), 30000);
-            // this.pp();
+            this.pp();
             // this.getacc = setInterval(() => this.pp(), 25000);
-            this.getlastnft();
+            // this.getlastnft();
             this.gnft = setInterval(() => this.getlastnft(), 120000);
 
         },
@@ -150,28 +150,33 @@
                 this.gettlm();
                 this.getlastminetx();
             },
-            async getlastnft(){
-                for (let i = 0; i < this.items.length; i++) {
-                    const res = await axios.get('https://hyperion.wax.eosdetroit.io/v2/state/get_account?account='+this.items[i].accname);
-                    for (let j = 0; j < res.data.actions.length; j++) {
-                        if(res.data.actions[j].act.name ==="logmint"){
-                            for (let k = 0; k < res.data.actions[j].act.data.immutable_template_data.length; k++) {
-                                if(res.data.actions[j].act.data.immutable_template_data[k].key === "img"){
-                                    this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + res.data.actions[j].act.data.immutable_template_data[k].value[1];
+            async getlastnft(i){
+                await axios.get('https://api.waxsweden.org/v2/state/get_account?account='+this.items[i].accname)
+                .then(response => {
+                    for (let j = 0; j < response.data.actions.length; j++) {
+                        if(response.data.actions[j].act.name ==="logmint"){
+                            for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
+                                if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
+                                    this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
                                     break;
                                 }
                             }
                             break;
                         }
                     }
-                }
+                })
+                .catch(error => {
+                    this.errorMessage = error.message;
+                    this.getlastnft(i)
+                });
             },
             async pp(){
-                this.tlmtemp = 0;
-                this.waxStaketemp = 0;
-                this.waxBalancetemp = 0;
+                // this.tlmtemp = 0;
+                // this.waxStaketemp = 0;
+                // this.waxBalancetemp = 0;
                 for (let i = 0; i < this.items.length; i++) {
-                    this.getaccount(i);
+                    this.getlastnft(i);
+                    // this.getaccount(i);
                 }
             },
             async getaccount(i){
