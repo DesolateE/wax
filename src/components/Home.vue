@@ -3,6 +3,7 @@
     <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
     <b-button class="btn" variant="primary" @click="watch">Watch</b-button>
     <b-button class="btn" variant="info" @click="nft">NFT</b-button>
+    <!-- <b-button class="btn" variant="danger" @click="noti">NOTI</b-button> -->
   <!-- <button @click="removeRow(row)">Remove</button>
   <button class="button btn-primary" @click="addRow">Add row</button> -->
     <b-table striped hover :items="items" :fields="fields">
@@ -14,9 +15,10 @@
       </template>
     </b-table>
     <b-button class="button btn-primary" @click="addRow">Add row</b-button>
-    <b-button class="button btn-danger" @click="removeRow">Remove lastRow</b-button>
     <b-button class="btn" variant="primary" @click="watch">Watch</b-button>
     <b-button class="btn" variant="info" @click="nft">NFT</b-button>
+    <br>
+    <b-button class="button btn-danger" @click="removeRow">Remove lastRow</b-button>
   </div>
 
   
@@ -60,6 +62,9 @@ export default {
   methods: {
     watch(){
       this.$router.replace("/watch")
+    },
+    noti(){
+      this.$router.replace("/noti")
     },
     nft(){
       this.$router.replace("/nft")

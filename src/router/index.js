@@ -4,6 +4,7 @@ import Home from '../components/Home.vue'
 import LoginPage from '../components/LoginPage.vue'
 import Watch from '../components/Watch.vue'
 import Nft from '../components/Nft.vue'
+import Noti from '../components/Noti.vue'
 
 Vue.use(VueRouter)
 
@@ -27,6 +28,11 @@ const routes = [
     path: '/nft',
     name: 'nft',
     component: Nft
+  },
+  {
+    path: '/noti',
+    name: 'noti',
+    component: Noti
   }
 ]
 

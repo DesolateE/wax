@@ -4,9 +4,9 @@
         <b-button class="button btn-primary" @click="home">Home</b-button>
         <b-button class="btn" variant="info" @click="nft">NFT</b-button>
         <div style="font-size:2vw">update every 30sec %cpu blue:0-80% yellow:80-100% red>100% MineTime </div>
-        <div style="font-size:2vw">MineTime -7hours(90sec refresh) if lastmine>15min bg=red /NFT(120sec refresh) </div>
         <p style="font-size:1vw">WaxBalance:<input v-model="waxBalance"> totalTML:<input v-model="tlm"> totalWaxStake:<input v-model="waxStake"></p>
         <b-button class="btn" variant="success" @click="forceup">fouce update</b-button>
+        <b-button class="btn" variant="primary" @click="gettotal">Get_total (click when all data load)</b-button>
         <b-table striped hover :items="items" :fields="fields">
             <template v-slot:cell(index)="row">
                 <div style="font-size:25px">{{ row.index + 1 }}</div>
@@ -59,7 +59,10 @@
                 <div style="background-color:#ffff66;font-size:25px" v-else-if="row.item.lasttlm >= 0.1">
                     {{ row.item.lasttlm }} TLM
                 </div>
-                <div style="background-color:#ffffcc;font-size:25px" v-else-if="row.item.lasttlm >= 0.0005">
+                <div style="background-color:#ffffcc;font-size:25px" v-else-if="row.item.lasttlm >= 0.025">
+                    {{ row.item.lasttlm }} TLM
+                </div>
+                <div style="font-size:25px" v-else-if="row.item.lasttlm >= 0.0005">
                     {{ row.item.lasttlm }} TLM
                 </div>
                 <div style="background-color:#993333;font-size:25px" v-else-if="row.item.lasttlm > 0">
@@ -129,14 +132,14 @@
             this.pp();
             // this.getacc = setInterval(() => this.pp(), 25000);
             // this.getlastnft();
-            this.gnft = setInterval(() => this.pp(), 30000);
+            this.getall = setInterval(() => this.pp(), 30000);
 
         },
         beforeDestroy() {
             // clearInterval(this.papi)
             // clearInterval(this.gtlm)
             // clearInterval(this.glm)
-            clearInterval(this.gnft)
+            clearInterval(this.getall)
             // clearInterval(this.getacc)
         },
         computed: {
@@ -152,8 +155,6 @@
                 this.$router.replace("/nft")
             },
             forceup() {
-                this.postapi();
-                this.gettlm();
                 this.pp();
             },
             async pp(){
@@ -162,34 +163,17 @@
                 this.waxBalancetemp = 0;
                 for (let i = 0; i < this.items.length; i++) {
                     // this.getlastmine(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
-                    this.getlastnft(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
+                    // this.getlastnft(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
                     // this.getlastmine(i,'https://api.waxsweden.org/v2/state/get_account?account=');
                     // this.getlastnft(i,'https://api.waxsweden.org/v2/state/get_account?account=');
                     // this.getlastmine(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
-                    // this.getlastnft(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
-                    this.getaccount(i,'https://wax.blokcrafters.io/v2/state/get_account?account=')
+                    this.getaccount(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
+                    // this.getaccount(i,'https://wax.blokcrafters.io/v2/state/get_account?account=')
                 }
-            },
-            async totalcal(){
                 this.delay(2000)
-                this.tlmtemp = 0;
-                this.waxStaketemp = 0;
-                this.waxBalancetemp = 0;
-                for (let i = 0; i < this.items.length; i++) {
-                    this.tlmtemp += parseFloat(this.items[i].tlm.split("TLM")[0]);
-                        this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
-                        this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
-                        if(i == this.items.length-1){
-                            this.tlm = 0;
-                            this.tlm += this.tlmtemp;
-                            this.waxStake = 0;
-                            this.waxBalance = 0;
-                            this.waxStake += this.waxStaketemp;
-                            this.waxBalance += this.waxBalancetemp;
-                        }
-                        console.log(this.items[i])
-                }
+                this.gettotal();
             },
+            
             async getaccount(i,url){
                     await axios.get(url+this.items[i].accname)
                     .then(response => {
@@ -205,7 +189,7 @@
                             }
                         }
                     
-                        for (let j = 0; j < 4; j++) {
+                        for (let j = 0; j < response.data.actions.length; j++) {
                             if(response.data.actions[j].act.name ==="transfer" && response.data.actions[j].act.account === "alien.worlds"){
                                 this.items[i].lastmine = Math.floor((Date.now()-Date.parse(response.data.actions[j].timestamp)-25200000)/(60000));
                                 this.items[i].lasttlm = response.data.actions[j].act.data.amount;
@@ -216,24 +200,12 @@
                         if(response.data.actions[j].act.name ==="logmint"){
                             for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
                                 if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
-                                    this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
+                                    this.items[i].lastNFT = "https://ipfs.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
                                     break;
                                 }
                             }
                             break;
                         }
-                        }
-                        this.tlmtemp += parseFloat(this.items[i].tlm.split("TLM")[0]);
-                        this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
-                        this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
-                        if(i == this.items.length-1){
-                            this.delay(2000)
-                            this.tlm = 0;
-                            this.tlm += this.tlmtemp;
-                            this.waxStake = 0;
-                            this.waxBalance = 0;
-                            this.waxStake += this.waxStaketemp;
-                            this.waxBalance += this.waxBalancetemp;
                         }
                         var time = new Date();
                         this.items[i].timeupdate = ""+time.getHours() +":"
@@ -249,48 +221,61 @@
                      });
                 
             },
+            gettotal(){
+                let tlm = 0;
+                let waxStake = 0;
+                let waxBalance = 0;
+                for (let i = 0; i < this.items.length; i++) {
+                    tlm += parseFloat(this.items[i].tlm.split("TLM")[0]);
+                    waxStake += parseFloat(this.items[i].stake.split("WAX")[0]);
+                    waxBalance += parseFloat(this.items[i].balance.split("WAX")[0]);
+                }
+                this.tlm = tlm;
+                this.waxStake = waxStake;
+                this.waxBalance = waxBalance;
+            },
             async delay(ms) {
                 return new Promise((resolve) => setTimeout(resolve, ms));
             },
-            async postapi() {
-                this.waxStaketemp = 0;
-                this.waxBalancetemp = 0;
-                for (let i = 0; i < this.items.length; i++) {
-                    const res = await axios.post("https://chain.wax.io/v1/chain/get_account",
-                        JSON.stringify({ "account_name": this.items[i].accname }));
-                    this.items[i].balance = res.data.core_liquid_balance;
-                    this.items[i].cpuusage = (res.data.cpu_limit.used / res.data.cpu_limit.max) * 100;
-                    this.items[i].cpu = "" + res.data.cpu_limit.used / 1000 + "ms / "
-                        + res.data.cpu_limit.max / 1000 + "ms ";
-                    this.items[i].stake = res.data.self_delegated_bandwidth.cpu_weight;
+            // async postapi() {
+            //     this.waxStaketemp = 0;
+            //     this.waxBalancetemp = 0;
+            //     for (let i = 0; i < this.items.length; i++) {
+            //         const res = await axios.post("https://chain.wax.io/v1/chain/get_account",
+            //             JSON.stringify({ "account_name": this.items[i].accname }));
+            //         this.items[i].balance = res.data.core_liquid_balance;
+            //         this.items[i].cpuusage = (res.data.cpu_limit.used / res.data.cpu_limit.max) * 100;
+            //         this.items[i].cpu = "" + res.data.cpu_limit.used / 1000 + "ms / "
+            //             + res.data.cpu_limit.max / 1000 + "ms ";
+            //         this.items[i].stake = res.data.self_delegated_bandwidth.cpu_weight;
 
-                    this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
-                    this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
-                    if(i == this.items.length-1){
-                        this.waxStake = 0;
-                        this.waxBalance = 0;
-                        this.waxStake += this.waxStaketemp;
-                        this.waxBalance += this.waxBalancetemp;
-                    }
-                }
-            },
-            async gettlm() {
-                this.tlmtemp = 0;
-                for (let i = 0; i < this.items.length; i++) {
-                    const res = await axios.post("https://chain.wax.io/v1/chain/get_currency_balance",
-                        JSON.stringify({
-                            "code": "alien.worlds",
-                            "account": this.items[i].accname,
-                            "symbol": "TLM"
-                        }));
-                    this.items[i].tlm = res.data[0];
-                    this.tlmtemp += parseFloat(this.items[i].tlm.split("TLM")[0]);
-                    if(i == this.items.length-1){
-                        this.tlm = 0;
-                        this.tlm += this.tlmtemp;
-                    }
-                }
-            },
+            //         this.waxBalancetemp += parseFloat(this.items[i].balance.split("WAX")[0]);
+            //         this.waxStaketemp += parseFloat(this.items[i].stake.split("WAX")[0]);
+            //         if(i == this.items.length-1){
+            //             this.waxStake = 0;
+            //             this.waxBalance = 0;
+            //             this.waxStake += this.waxStaketemp;
+            //             this.waxBalance += this.waxBalancetemp;
+            //         }
+            //     }
+            // },
+            // async gettlm() {
+            //     this.tlmtemp = 0;
+            //     for (let i = 0; i < this.items.length; i++) {
+            //         const res = await axios.post("https://chain.wax.io/v1/chain/get_currency_balance",
+            //             JSON.stringify({
+            //                 "code": "alien.worlds",
+            //                 "account": this.items[i].accname,
+            //                 "symbol": "TLM"
+            //             }));
+            //         this.items[i].tlm = res.data[0];
+            //         this.tlmtemp += parseFloat(this.items[i].tlm.split("TLM")[0]);
+            //         if(i == this.items.length-1){
+            //             this.tlm = 0;
+            //             this.tlm += this.tlmtemp;
+            //         }
+            //     }
+            // },
             // async getlastminetx(i,url) {
             //         await axios.post('https://wax.pink.gg/v1/chain/get_table_rows',
             //             {
@@ -310,42 +295,42 @@
             //         });
                 
             // },
-            async getlastmine(i,url) {
-                await axios.get(url+this.items[i].accname)
-                .then(response => {
-                    for (let j = 0; j < 4; j++) {
-                        if(response.data.actions[j].act.name ==="transfer" && response.data.actions[j].act.account === "alien.worlds"){
-                            this.items[i].lastmine = Math.floor((Date.now()-Date.parse(response.data.actions[j].timestamp)-25200000)/(60000));
-                            this.items[i].lasttlm = response.data.actions[j].act.data.amount;
-                            break;
-                        }
-                    }
-                })
-                .catch(error => {
-                this.errorMessage = error.message;
-                this.getlastmine(i,url);
-                 });
-            },
-            async getlastnft(i,url){
-                await axios.get(url+this.items[i].accname)
-                .then(response => {
-                    for (let j = 0; j < response.data.actions.length; j++) {
-                        if(response.data.actions[j].act.name ==="logmint"){
-                            for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
-                                if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
-                                    this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                    }
-                })
-                .catch(error => {
-                    this.errorMessage = error.message;
-                    this.getlastnft(i)
-                });
-            },
+            // async getlastmine(i,url) {
+            //     await axios.get(url+this.items[i].accname)
+            //     .then(response => {
+            //         for (let j = 0; j < 4; j++) {
+            //             if(response.data.actions[j].act.name ==="transfer" && response.data.actions[j].act.account === "alien.worlds"){
+            //                 this.items[i].lastmine = Math.floor((Date.now()-Date.parse(response.data.actions[j].timestamp)-25200000)/(60000));
+            //                 this.items[i].lasttlm = response.data.actions[j].act.data.amount;
+            //                 break;
+            //             }
+            //         }
+            //     })
+            //     .catch(error => {
+            //     this.errorMessage = error.message;
+            //     this.getlastmine(i,url);
+            //      });
+            // },
+            // async getlastnft(i,url){
+            //     await axios.get(url+this.items[i].accname)
+            //     .then(response => {
+            //         for (let j = 0; j < response.data.actions.length; j++) {
+            //             if(response.data.actions[j].act.name ==="logmint"){
+            //                 for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
+            //                     if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
+            //                         this.items[i].lastNFT = "https://ipfs.atomichub.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
+            //                         break;
+            //                     }
+            //                 }
+            //                 break;
+            //             }
+            //         }
+            //     })
+            //     .catch(error => {
+            //         this.errorMessage = error.message;
+            //         this.getlastnft(i)
+            //     });
+            // },
             signout() {
                 firebase
                     .auth()

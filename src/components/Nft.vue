@@ -102,7 +102,7 @@ name: "Nft",
       await axios.get('https://wax.api.atomicassets.io/atomicassets/v1/templates/alien.worlds/'+temid)
         .then(response => {
           for(let j=0; j<assetsamount; j++){
-            this.items[i].img.push("https://ipfs.atomichub.io/ipfs/"+response.data.data.immutable_data.img);
+            this.items[i].img.push("https://ipfs.io/ipfs/"+response.data.data.immutable_data.img);
           }
         })
         .catch(error => {

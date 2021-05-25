@@ -2,7 +2,7 @@
   <div id="login" class="main-box">
     <div style="font-size:5vw">Sign Up and Login with google</div>
     <button id="google" @click="googleSignIn" class="btn-pic">
-      <img src="../assets/google-logo.png" alt width="1000px" height="1000px">
+      <img src="../assets/google-logo.png" alt width="500px" height="500px">
     </button>
   </div>
 </template>
