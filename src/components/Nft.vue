@@ -69,37 +69,44 @@ name: "Nft",
       this.$router.replace("/watch")
     },
     async fetchdata(){
-      let group = Math.ceil(this.items.length/3)
-      for(let i=0;i<group;i++){
-        for (let j = 3*i; j < 3*(i+1); j++) {
-          // console.log(j)
-          if(j < this.items.length)
-            this.getacctemplate(j)
+      // let group = Math.ceil(this.items.length/3)
+      // for(let i=0;i<group;i++){
+      //   for (let j = 3*i; j < 3*(i+1); j++) {
+      //     if(j < this.items.length)
+      //       this.getacctemplate(j)
+      //   }
+      //   await this.delay(2000)
+      // }
+      for (let i = 0; i < this.items.length; i++) {
+            this.getacctemplate(i)
         }
-        await this.delay(2000)
-      }
     },
     async getacctemplate(index){
-        await axios.get("https://wax.api.atomicassets.io/atomicassets/v1/accounts/"+this.items[index].accname)
+        await axios.get("https://api.wax-aa.bountyblok.io/atomicassets/v1/accounts/"+this.items[index].accname)
         .then(response => {
           for(let j =0; j < response.data.data.templates.length; j++){
-          this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets);
+            if(j%5==0){
+              this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets,"https://atomic.3dkrender.com/atomicassets/v1/templates/alien.worlds/");
+            }else if(j%5==1){
+              this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets,"https://wax-aa.eu.eosamsterdam.net/atomicassets/v1/templates/alien.worlds/");
+            }else if(j%5==2){
+              this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets,"https://api.wax-aa.bountyblok.io/atomicassets/v1/templates/alien.worlds/");
+            }else if(j%5==3){
+              this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets,"https://wax-atomic-api.eosphere.io/atomicassets/v1/templates/alien.worlds/");
+            }else{
+              this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets,"https://wax.api.atomicassets.io/atomicassets/v1/templates/alien.worlds/");
+            }
+          // this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets);
           }
         })
         .catch(error => {
           this.errorMessage = error.message;
-          this.delay(2000)
           this.getacctemplate(index);
         });
-        // const res = await axios.get('https://wax.api.atomicassets.io/atomicassets/v1/accounts/'+this.items[i].accname);
-        // for(let j =0; j < res.data.data.templates.length; j++){
-        //   this.searchtemplate(res.data.data.templates[j].template_id,i,res.data.data.templates[j].assets);
-        // }
-        // console.log(res.data.data)
       
     },
-    async searchtemplate(temid,i,assetsamount){
-      await axios.get('https://wax.api.atomicassets.io/atomicassets/v1/templates/alien.worlds/'+temid)
+    async searchtemplate(temid,i,assetsamount,url){
+      await axios.get(url+temid)
         .then(response => {
           for(let j=0; j<assetsamount; j++){
             this.items[i].img.push("https://ipfs.io/ipfs/"+response.data.data.immutable_data.img);
@@ -107,7 +114,6 @@ name: "Nft",
         })
         .catch(error => {
           this.errorMessage = error.message;
-          this.delay(2000)
           this.searchtemplate(temid,i,assetsamount)
         });
       // const res = await axios.get('https://wax.api.atomicassets.io/atomicassets/v1/templates/alien.worlds/'+temid);
