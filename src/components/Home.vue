@@ -3,7 +3,7 @@
     <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
     <b-button class="btn" variant="primary" @click="watch">Watch</b-button>
     <b-button class="btn" variant="info" @click="nft">NFT</b-button>
-    <!-- <b-button class="btn" variant="danger" @click="noti">NOTI</b-button> -->
+    <b-button @click="noti">checkNFTclaim</b-button>
   <!-- <button @click="removeRow(row)">Remove</button>
   <button class="button btn-primary" @click="addRow">Add row</button> -->
     <b-table striped hover :items="items" :fields="fields">
@@ -64,7 +64,7 @@ export default {
       this.$router.replace("/watch")
     },
     noti(){
-      this.$router.replace("/noti")
+      this.$router.replace("/claimcheck")
     },
     nft(){
       this.$router.replace("/nft")

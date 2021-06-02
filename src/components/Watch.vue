@@ -3,6 +3,7 @@
         <b-button @click="signout" type="submit" class="btn" variant="danger">Signout</b-button>
         <b-button class="button btn-primary" @click="home">Home</b-button>
         <b-button class="btn" variant="info" @click="nft">NFT</b-button>
+        <b-button @click="noti">checkNFTclaim</b-button>
         <!-- <div style="font-size:1vw">update every 30sec %cpu blue:0-80% yellow:80-100% red>100% MineTime </div> -->
         <p style="font-size:0.8vw">Alcor TLM/WAX: <input v-model="alcortlmwax"> ------ Real TLM/WAX: <input v-model="tlmwax"> ------ Rate_Difference: <input v-model="diff"></p>
         <p style="font-size:1.2vw">CurrentRate WAX/USDT: <input v-model="waxrate"> USDT</p>
@@ -13,6 +14,16 @@
         <b-button class="btn" variant="success" @click="forceup">fouce update</b-button>
         <b-button class="button btn-primary" @click="home">Home</b-button>
         <b-button class="btn" variant="info" @click="nft">NFT</b-button>
+        <b-button @click="noti">checkNFTclaim</b-button>
+        <b-alert
+            :show="dismissCountDown"
+            dismissible
+            variant="success"
+            @dismissed="dismissCountDown=0"
+            >
+            <p style="font-size:1.2vw">You got {{nftcount}} NFT - {{ nftc }}</p>
+            <!-- <p style="font-size:1.1vw">{{ nftc }}</p> -->
+        </b-alert>
         <!-- <b-button class="btn" variant="info" @click="tt">tt</b-button> -->
         <!-- <b-button class="btn" variant="primary" @click="gettotal">Get_total (click when all data load)</b-button> -->
         <!-- <b-button class="btn" variant="primary" @click="getprice">Get_Currentprice</b-button> -->
@@ -78,9 +89,9 @@
                     {{ row.item.lasttlm }} TLM
                 </div>
             </template>
-            <template v-slot:cell(lastNFT)="row">
+            <!-- <template v-slot:cell(lastNFT)="row">
                 <img :src= row.item.lastNFT width="120" height="120">
-            </template>
+            </template> -->
             <template v-slot:cell(timeupdate)="row">
                 <div style="font-size:25px">
                 {{row.item.timeupdate}}
@@ -91,19 +102,34 @@
                 {{row.item.baglock}}
                 </div>
             </template>
-            <template  v-slot:cell(bagitem)="row">
-                <!-- {{row.item.bagitem}} -->
+            <template  v-slot:cell(claim)="row">
+                <div class="container">
+                    <div class="row">
+                        <div class="col" v-for="(claim,index) in row.item.claim" v-bind:key=index>
+                            <img :src= claim width="120" height="150" >
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <!-- <template v-slot:cell(claim)="row">
+                 <div style="background-color:#ff9900;font-size:25px" v-if="row.item.claim > 0">
+                    {{row.item.claim}}
+                </div>
+                <div style="font-size:25px" v-else>
+                    {{row.item.claim}}
+                </div>
+            </template> -->
+            <!-- <template v-slot:cell(claim)="row">
+                    {{row.item.claim}}
+                
+            </template> -->
+            <!-- <template  v-slot:cell(bagitem)="row">
                 <div class="container">
                     <div class="row" v-for="(bagitem,index) in row.item.bagitem" v-bind:key=index>
                         {{bagitem}}
                     </div>
-                    <!-- <div class="row">
-                        <div class="col" v-for="(img,index) in row.item.img" v-bind:key=index>
-                        <img :src= img width="120" height="150" >
-                        </div>
-                    </div> -->
                 </div>
-             </template>
+             </template> -->
         </b-table>
         <!-- <p style="font-size:1vw">WaxBalance:<input v-model="waxBalance"> totalTML:<input v-model="tlm"> totalWaxStake:<input v-model="waxStake"></p> -->
         <b-button class="btn" variant="success" @click="forceup">fouce update</b-button>
@@ -127,8 +153,9 @@
             return {
                 fields: {
                     Index: "index", accname: "accname", tlm: "tlm", balance: "balance", stake: "stake"
-                    , cpu: "cpu", cpuusage: "cpuusage", lasttlm: "lasttlm", lastmine: "lastmine", lastNFT: "lastNFT"
-                    ,timeupdate:"timeupdate",bagitem:"bagitem",baglock:"baglock"
+                    , cpu: "cpu", cpuusage: "cpuusage", lasttlm: "lasttlm", lastmine: "lastmine"
+                    // , lastNFT: "lastNFT"
+                    ,timeupdate:"timeupdate",baglock:"baglock",claim:"claim"
                 },
                 items: [],
                 waxStake: 0,
@@ -147,7 +174,14 @@
                 diff:0,
                 bagid: [],
                 bagitem: [],
-                firsttime: true
+                firsttime: true,
+                claim: [],
+                dismissSecs: 100000000,
+                dismissCountDown: 0,
+                showDismissibleAlert: false,
+                nftc: '',
+                nftcount:0,
+                show:''
             };
         },
         beforeCreate() {
@@ -165,11 +199,12 @@
                 const data = snapshot.val();
                 for (let i = 0; i < data.length; i++) {
                     this.items.push({ index: i + 1, accname: data[i], balance: 0, tlm: 0, stake: 0, cpu: "", cpuusage: 0, lasttlm: ""
-                    , lastmine: '',lastNFT: '',timeupdate:'',baglock:'',bagitem:[]})
-                    this.bagid.push([]);
-                    for(let j=0;j<3;j++){
-                        this.items[i].bagitem.push("")
-                    }
+                    , lastmine: '',timeupdate:'',baglock:'',claim:[]})
+                    this.claim.push([]);
+                    // this.bagid.push([]);
+                    // for(let j=0;j<3;j++){
+                    //     this.items[i].bagitem.push("")
+                    // }
                 }
             });
             
@@ -178,7 +213,9 @@
             this.getprice();
             this.price = setInterval(() => this.getprice(), 29000);
             this.bag();
-            this.ba = setInterval(() => this.bag(), 30000);
+            this.ba = setInterval(() => this.bag(), 40000);
+            
+            // setInterval(() => this.getbagitem(), 10000);
 
         },
         beforeDestroy() {
@@ -201,10 +238,13 @@
             nft() {
                 this.$router.replace("/nft")
             },
+            noti(){
+                this.$router.replace("/claimcheck")
+            },
             forceup() {
                 this.pp();
                 this.bag();
-                this.getbagitem();
+                // this.getbagitem();
             },
             async getprice(){
                 await axios.get("https://api.coingecko.com/api/v3/exchanges/kucoin/tickers?coin_ids=wax")
@@ -263,9 +303,20 @@
                     // this.getlastnft(i,'https://wax.blokcrafters.io/v2/state/get_account?account=');
                     // this.getlastmine(i,'https://api.waxsweden.org/v2/state/get_account?account=');
                     // this.getlastnft(i,'https://api.waxsweden.org/v2/state/get_account?account=');
-                    // this.getlastmine(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
-                    this.getaccount(i,' https://wax.cryptolions.io/v2/state/get_account?account=');
+                    // this.getaccount(i,'https://waxapi.ledgerwise.io/v2/state/get_account?account=');
+                    // this.getaccount(i,'https://wax.cryptolions.io/v2/state/get_account?account=');
                     // this.getaccount(i,'https://api.wax.alohaeos.com/v2/state/get_account?account=')
+                     if(i%3==0){
+                        this.getaccount(i,'https://waxapi.ledgerwise.io/v2/state/get_account?account=');
+                     }else if(i%3==1){
+                        this.getaccount(i,'https://wax.eosphere.io/v2/state/get_account?account=');
+                    //  }else if(i%5==2){
+                    //     this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets,"https://api.wax-aa.bountyblok.io/atomicassets/v1/templates/alien.worlds/");
+                    //  }else if(i%5==3){
+                    //    this.searchtemplate(response.data.data.templates[j].template_id,index,response.data.data.templates[j].assets,"https://wax-atomic-api.eosphere.io/atomicassets/v1/templates/alien.worlds/");
+                     }else{
+                       this.getaccount(i,'https://wax.cryptolions.io/v2/state/get_account?account=');
+                     }
                 }
                 this.gettotal();
                 this.pricecal();
@@ -273,11 +324,20 @@
             async bag(){
                 for (let i = 0; i < this.items.length; i++) {
                     this.bagcheck(i); 
+                    this.claimcheck(i);
                 }
-                this.delay(3000)
-                if(this.bagid[0].length>1){
-                    this.getbagitem();
+                this.nftc = ""
+                this.nftcount = 0;
+                for (let i = 0; i < this.claim.length; i++) {
+                    this.items[i].claim = [];
+                    if(this.claim[i].length > 0){
+                        for (let j = 0; j < this.claim[i].length; j++) {
+                            this.claimpic(i,"https://wax.api.atomicassets.io/atomicassets/v1/templates/alien.worlds/"+this.claim[i][j])
+                        }
+                    }
                 }
+                this.dismissCountDown = this.dismissSecs;
+                // this.nftbuild()
             },
             
             async getaccount(i,url){
@@ -302,17 +362,17 @@
                                 break;
                             }
                         }
-                        for (let j = 0; j < response.data.actions.length; j++) {
-                        if(response.data.actions[j].act.name ==="logmint"){
-                            for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
-                                if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
-                                    this.items[i].lastNFT = "https://ipfs.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                        }
+                        // for (let j = 0; j < response.data.actions.length; j++) {
+                        // if(response.data.actions[j].act.name ==="logmint"){
+                        //     for (let k = 0; k < response.data.actions[j].act.data.immutable_template_data.length; k++) {
+                        //         if(response.data.actions[j].act.data.immutable_template_data[k].key === "img"){
+                        //             this.items[i].lastNFT = "https://ipfs.io/ipfs/" + response.data.actions[j].act.data.immutable_template_data[k].value[1];
+                        //             break;
+                        //         }
+                        //     }
+                        //     break;
+                        // }
+                        // }
                         var time = new Date();
                         this.items[i].timeupdate = ""+time.getHours() +":"
                         if(time.getMinutes() <= 9){
@@ -377,6 +437,39 @@
                         this.bagcheck(i);
                     });
             },
+            async claimcheck(i){
+                    await axios.post("https://api.wax.alohaeos.com/v1/chain/get_table_rows",
+                        JSON.stringify({
+                            "json": true,
+                            "code": "m.federation",
+                            "scope": "m.federation",
+                            "table": "claims",
+                            "table_key": "",
+                            "lower_bound": this.items[i].accname,
+                            "upper_bound": this.items[i].accname,
+                            "index_position": 1,
+                            "key_type": "",
+                            "limit": "100",
+                            "reverse": false,
+                            "show_payer": false
+                        },{
+                            headers: {
+                                "Access-Control-Allow-Origin": "*",
+                                
+                            }
+                        }))
+                    .then(response => {
+                            if(response.data.rows.length >0){
+                                this.claim[i] = response.data.rows[0].template_ids;
+                            }else{
+                                this.claim[i] = []
+                            }
+                    })
+                    .catch(error => {
+                        this.errorMessage = error.message;
+                        this.claimcheck(i);
+                    });
+            },
             async getbagitem(){
                 let url ="";
                 for(let i=0;i<this.bagid.length;i++){
@@ -391,16 +484,59 @@
                     }else{
                         url = "https://wax.api.atomicassets.io/atomicassets/v1/assets/"
                     }
-                    for(let j=0;j<this.bagid[i].length;j++){
+                    this.bagpost(i,url)
+                }
+            },
+            async bagpost(i,url){
+                for(let j=0;j<this.bagid[i].length;j++){
                         await axios.get(url+this.bagid[i][j])
                         .then(response => {
                             this.items[i].bagitem[j] = response.data.data.name;
+                            console.log(this.bagid[i][j])
                         })
                         .catch(error => {
                             this.errorMessage = error.message;
+                            this.delay(2000)
                             this.getbagitem(url);
                         });
                     }
+            },
+            async claimpic(i,url){
+                await axios.get(url)
+                .then(response => {
+                    this.items[i].claim.push("https://ipfs.io/ipfs/" + response.data.data.immutable_data.img)
+                    this.nftc += response.data.data.name +","
+                    this.nftcount += 1;
+                })
+                .catch(error => {
+                    this.errorMessage = error.message;
+                    this.claimpic(i,url);
+                });
+                    
+            },
+            nftbuild(){
+                let nf = this.nftc.split(",");
+                this.nftc = "";
+                nf.pop()
+                let a = [];
+                for(let i=0; i<nf.length; i++){
+                    let isfound = false;
+                    for(let j=0; j<a.length; j++){
+                        if(nf[i] === a[j].name){
+                            isfound = true;
+                        }
+                        if(isfound){
+                            a[j].count += 1;
+                            break;
+                        }
+                    }
+                    if(!isfound){
+                        a.push({ name : nf[i],count: 1})
+                    }
+                }
+                this.show = "";
+                for(let i=0; i<a.length; i++){
+                    this.show = this.show + a[i].count + " " + a[i].name +", "
                 }
             },
             // async postapi() {

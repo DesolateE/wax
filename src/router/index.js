@@ -30,8 +30,8 @@ const routes = [
     component: Nft
   },
   {
-    path: '/noti',
-    name: 'noti',
+    path: '/claimcheck',
+    name: 'claimcheck',
     component: Noti
   }
 ]
