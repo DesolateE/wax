@@ -1,4 +1,8 @@
 # wax
+## Info
+```
+traking wax wallet resource
+```
 
 ## Project setup
 ```
